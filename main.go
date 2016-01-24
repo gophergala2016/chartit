@@ -4,6 +4,8 @@ import (
 	"encoding/csv"
 	"flag"
 	"fmt"
+	"github.com/ajstarks/svgo"
+	"io"
 	"log"
 	"os"
 	"strconv"
@@ -59,18 +61,32 @@ func readCSV(filename string) (c Charts, err error) {
 	return
 }
 
+func Draw(c Charts, width, height int, w io.Writer) (err error) {
+	canvas := svg.New(w)
+	canvas.Start(width, height)
+	canvas.End()
+	return
+}
+
 func main() {
 	var csvFile string
 	var chartFile string
+	var width, height int
 	flag.StringVar(&csvFile, "csv", "input.csv", "CSV filename")
 	flag.StringVar(&chartFile, "output", "output.svg", "OUTPUT filename")
+	flag.IntVar(&width, "width", 1000, "OUTPUT file width")
+	flag.IntVar(&height, "height", 800, "OUTPUT file height")
 	flag.Parse()
 	c, err := readCSV(csvFile)
 	if err != nil {
 		log.Fatal("Read csv file with some problem!")
 	}
-	for _, i := range c {
-		fmt.Println(i.Label, i.Value)
+	out, err := os.Open(chartFile)
+	if err != nil {
+		log.Fatal("Open file with some problem!")
+	}
+	if err = Draw(c, width, height, out); err != nil {
+		log.Fatal("Write canvas file with some problem!")
 	}
 	fmt.Println(chartFile)
 }
